@@ -1,0 +1,9 @@
+.tools{
+  text-align: center;
+  display: grid;
+  grid-template-columns: 75px 75px;
+  grid-template-rows: 75px;
+  grid-gap: 20px;
+  place-content: center;
+  margin-top: 50px;
+}
