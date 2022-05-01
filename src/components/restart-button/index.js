@@ -1,8 +1,7 @@
 import React from 'react'
 import './style.css'
-function RestartButton({ startGame, dialogHide }) {
+function RestartButton({ startGame }) {
   const handleClick = () => {
-    if (dialogHide) dialogHide()
     startGame()
   }
   return (

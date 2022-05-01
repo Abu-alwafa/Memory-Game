@@ -18,15 +18,11 @@ function Dialog({ startGame, turns, dialogShow }) {
     colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'],
   }
 
-  const dialogRef = useRef()
-  const dialogHide = () => {
-    dialogRef.current.classList.remove('show')
-  }
   useEffect(() => {
     setTimeout(() => setLoader(false), 15000)
   }, [])
   return (
-    <div className={dialogShow ? 'dialog show' : 'dialog'} ref={dialogRef}>
+    <div className={dialogShow ? 'dialog show' : 'dialog'}>
       <Confetti active={dialogShow} config={config} />
       {dialogShow && <audio src="assets/start.wav" autoPlay></audio>}
       <div className="dialog-content">
@@ -37,7 +33,7 @@ function Dialog({ startGame, turns, dialogShow }) {
             <h2>Excellent, You Are a Genius</h2>
             <h3 style={{ fontWeight: 500 }}>Turns : {turns}</h3>
             <div className="buttons">
-              <RestartButton dialogHide={dialogHide} startGame={startGame} />
+              <RestartButton startGame={startGame} />
             </div>
           </>
         )}

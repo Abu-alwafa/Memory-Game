@@ -8,6 +8,8 @@ function Cards({ cards, choiceOne, choiceTwo, handleChoise, hint }) {
 
   const cardsArr = cardsArray.map((card) => {
     let isHint = card.url === hint.url
+    // console.log(card.url, hint.url)
+
     return (
       <Card
         isHint={isHint}

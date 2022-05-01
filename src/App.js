@@ -4,7 +4,15 @@ import './App.css'
 import Cards from './components/cards'
 import Dialog from './components/dialog'
 import Tools from './components/tools'
-
+import { vars } from './environment'
+const ImagesArray = [
+  { url: 'assets/1.gif' },
+  { url: 'assets/2.gif' },
+  { url: 'assets/3.gif' },
+  { url: 'assets/4.gif' },
+  { url: 'assets/5.gif' },
+  { url: 'assets/6.gif' },
+]
 export const DisabledContext = createContext()
 
 function App() {
@@ -14,14 +22,14 @@ function App() {
   const [choiceTwo, setChoiceTwo] = useState(null)
   const [disabled, setDisabled] = useState(false)
   const [dialogShow, setDialogShow] = useState(false)
-  const [hint, setHint] = useState('')
+  const [hint, setHint] = useState({})
 
   const rightSound = new Audio('assets/good-6081.mp3')
   const wrongSound = new Audio('assets/negative_beeps-6008.mp3')
 
   const getRandomPage = () => Math.round(Math.random() * (10 - 1) + 1)
   const buildUrl = () => {
-    let url = new URL('https://api.pexels.com/v1/search')
+    let url = new URL(vars.api_base)
 
     url.search = new URLSearchParams({
       query: 'shape',
@@ -30,22 +38,64 @@ function App() {
       per_page: '6',
       page: getRandomPage(),
     })
-    return url
+
+    return url.toString()
   }
-  const shuffleCards = () => {
-    axios
-      .get(
-        `${buildUrl()}?key=563492ad6f917000010000019a40727dcf3843ed8cb6c3cd37255da1`,
+  const ls_photos_KEY = 'P_PHOTOS'
+  let cache = {}
+  const loadCacheFromLocalStorage = () => {
+    let c = {}
+    try {
+      c = JSON.parse(localStorage.getItem(ls_photos_KEY))
+    } catch (e) {
+    } finally {
+      cache = c
+    }
+  }
+
+  const _shuffle = (arr) => arr.sort(() => Math.random() - 0.5)
+
+  const localPhotos = _shuffle(
+    ImagesArray.concat(ImagesArray).map((image, i) => {
+      return {
+        id: `${i}${Date.now()}`,
+        matched: null,
+        url: image.url,
+      }
+    }),
+  )
+
+  const _updateCache = (cache) => {
+    localStorage.setItem(ls_photos_KEY, JSON.stringify(cache))
+  }
+
+  const getPhotos = async () => {
+    try {
+      const url = buildUrl()
+
+      const res = cache[url]
+        ? cache[url]
+        : await axios.get(url, {
+            headers: { Authorization: vars.pexels_api_key },
+          })
+
+      cache[url] = res
+
+      _updateCache(cache)
+
+      const photos = _shuffle(
+        res.data.photos.concat(res.data.photos).map((photo, i) => {
+          return {
+            id: `${i}${Date.now()}`,
+            matched: null,
+            url: photo.src.tiny,
+          }
+        }),
       )
-      .then((res) => {
-        setCards(
-          [...res.data.photos, ...res.data.photos]
-            .sort(() => Math.random() - 0.5)
-            .map((card) => {
-              return { id: Math.random(), url: card.src.small, matched: false }
-            }),
-        )
-      })
+
+      // cards.push(...photos)
+      setCards(photos)
+    } catch (e) {}
   }
   const handleChoise = (card) => {
     if (choiceOne) {
@@ -55,20 +105,21 @@ function App() {
     }
   }
   const handleHint = () => {
-    let hintCard = ''
-    const filteredCards = cards.filter((card) => card.matched === false)
+    let hintCard
+    const filteredCards = cards.filter((card) => !card.matched)
     let randomIndex = Math.floor(Math.random() * filteredCards.length)
     hintCard = filteredCards[randomIndex]
 
     setHint(hintCard)
   }
   const startGame = () => {
-    shuffleCards()
+    loadCacheFromLocalStorage()
+    getPhotos()
+    setDialogShow(false)
     setTurns(0)
     setChoiceOne(null)
     setChoiceTwo(null)
   }
-
   const resetTurn = () => {
     setChoiceOne(null)
     setChoiceTwo(null)
@@ -83,7 +134,6 @@ function App() {
   useEffect(() => {
     if (choiceOne && choiceTwo) {
       setDisabled(true)
-
       if (choiceOne.url === choiceTwo.url) {
         setTimeout(() => rightSound.play(), 200)
         setCards((prevCards) => {
