@@ -28,9 +28,3 @@ function Card({ card, handleChoise, showed, isHint }) {
 }
 
 export default Card
-
-// Card.propTypes = {
-//   card: PropTypes.shape({
-//     url: PropTypes.string.isRequired,
-//   }),
-// }
